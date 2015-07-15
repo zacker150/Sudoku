@@ -52,9 +52,13 @@ public class SodukuSolver {
         clearRow(n, row);
         clearCol(n, col);
         clearBlock(n, row, col);
-        analyzeRow(row);
-        analyzeCol(col);
-        analyze(row, col);
+        ramify(row,col);
+    }
+    
+    public void ramify(int row, int col){
+        analyzeRowSinglePos(row);
+        analyzeColSinglePos(col);
+        analyzeBlocksSinglePos(row, col);
     }
 
     private void clearRow(int n, int row) {
@@ -102,7 +106,7 @@ public class SodukuSolver {
         }
     }
 
-    public void analyzeRow(int row) {
+    public void analyzeRowSinglePos(int row) {
         for (int num = 1; num < 10; num++) {
             HashSet<Integer> cols = new HashSet<Integer>();
             for (int c = 0; c < 9; c++) {
@@ -121,7 +125,7 @@ public class SodukuSolver {
         }
     }
 
-    public void analyzeCol(int col) {
+    public void analyzeColSinglePos(int col) {
         for (int num = 1; num < 10; num++) {
             HashSet<Integer> rows = new HashSet<Integer>();
             for (int r = 0; r < 9; r++) {
@@ -176,7 +180,7 @@ public class SodukuSolver {
 
     }
 
-    public void analyze(int row, int col) {
+    public void analyzeBlocksSinglePos(int row, int col) {
         for (int x = -2; x < 3; x++) {
             analyzeBlock(row + 3 * x, col);
             analyzeBlock(row, col + 3 * x);
