@@ -57,12 +57,13 @@ public class SodukuSolver {
      * Inserts a value into the grid and determines the ramifications of the
      * insertion.
      *
-     * @param n The value to insert into the grid
+     * @param n The value to insert into the grid. n must be a valid number that
+     * and cannot be an illegal move
      * @param row The row index of the slot n will be inserted into
      * @param col The column index of the slot n will be inserted into
      */
     public void insert(int n, int row, int col) {
-        if (n < 1 || n > 9) {
+        if (n < 1 || n > 9 || !possibilities[row][col].contains(n)) {
             throw new IllegalArgumentException();
         }
         possibilities[row][col] = null;
@@ -73,17 +74,6 @@ public class SodukuSolver {
         ramify(row, col);
     }
 
-    /**
-     * Analyzes the ramifications of any changes in the possibilities
-     *
-     * @param row The row index of the slot that was changed
-     * @param col The column index of the slot that was changed
-     */
-    public void ramify(int row, int col) {
-        analyzeRowSinglePos(row);
-        analyzeColSinglePos(col);
-        analyzeBlocksSinglePos(row, col);
-    }
 
     /**
      * Clears a number from the possibilities of the rest of the row, and
@@ -150,6 +140,20 @@ public class SodukuSolver {
             }
         }
     }
+    
+    /**
+     * Analyzes the ramifications of any changes in the possibilities given a 
+     * change in the soduku grid
+     *
+     * @param row The row index of the slot that was changed
+     * @param col The column index of the slot that was changed
+     */
+    public void ramify(int row, int col) {
+        analyzeRowSinglePos(row);
+        analyzeColSinglePos(col);
+        analyzeBlocksSinglePos(row, col);
+    }
+    
     /**
      * Analyzes a row for any numbers that are only possible in one location 
      * and inserts them into that location. 
@@ -174,6 +178,7 @@ public class SodukuSolver {
             }
         }
     }
+    
     /**
      * Analyzes a column for any numbers that are only possible in one location 
      * and inserts them into that location 
@@ -219,10 +224,10 @@ public class SodukuSolver {
         for (int num = 1; num < 10; num++) {
             HashSet<Point> locs = new HashSet<>();
             outer:
-            for (int rDiv = 0; rDiv < 3; rDiv++) {
-                for (int cDiv = 0; cDiv < 3; cDiv++) {
-                    int r = blockR * 3 + rDiv;
-                    int c = blockC * 3 + cDiv;
+            for (int cellR = 0; cellR < 3; cellR++) {
+                for (int cellC = 0; cellC < 3; cellC++) {
+                    int r = blockR * 3 + cellR;
+                    int c = blockC * 3 + cellC;
                     if (grid[r][c] == num) {
                         locs.clear();
                         break outer;
@@ -235,7 +240,6 @@ public class SodukuSolver {
             }
             if (locs.size() == 1) {
                 Point p = locs.iterator().next();
-                //System.out.println("Found" + num + " at " + p.x + " " + p.y);
                 insert(num, p.x, p.y);
             }
         }
