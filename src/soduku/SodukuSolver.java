@@ -8,6 +8,7 @@ package soduku;
 import java.awt.Point;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * This class solves a Soduku game to the best of it's ability. The numbers 1-9
@@ -20,7 +21,7 @@ public class SodukuSolver {
 
     private int[][] grid;
     private HashSet<Integer>[][] possibilities;
-    
+
     /**
      * Constructs a Soduku Solver with an empty map
      */
@@ -38,7 +39,8 @@ public class SodukuSolver {
     }
 
     /**
-     * Constructs a SodukuSolver with a starting grid, and solves as far as it can
+     * Constructs a SodukuSolver with a starting grid, and solves as far as it
+     * can with basic logic
      *
      * @param arr
      */
@@ -63,7 +65,7 @@ public class SodukuSolver {
      * @param col The column index of the slot n will be inserted into
      */
     public void insert(int n, int row, int col) {
-        if (n < 1 || n > 9 || !possibilities[row][col].contains(n)) {
+        if (n < 1 || n > 9 || (possibilities[row][col] != null && !possibilities[row][col].contains(n))) {
             throw new IllegalArgumentException();
         }
         possibilities[row][col] = null;
@@ -73,7 +75,6 @@ public class SodukuSolver {
         clearBlock(n, row, col);
         ramify(row, col);
     }
-
 
     /**
      * Clears a number from the possibilities of the rest of the row, and
@@ -98,7 +99,7 @@ public class SodukuSolver {
     /**
      * Clears a number from the possibilities of the rest of the column, and
      * inserts any squares that have only one possible value.
-     * 
+     *
      * @param n The number to clear the column of
      * @param col The index of the column to clear
      */
@@ -114,10 +115,11 @@ public class SodukuSolver {
             }
         }
     }
+
     /**
      * Clears a number from the possibilities of the rest of the block, and
      * inserts any squares that have only one possible value.
-     * 
+     *
      * @param n The number to clear the block of
      * @param row The row index of a square in the block to clear
      * @param col The column index of a square in the block to clear
@@ -140,9 +142,9 @@ public class SodukuSolver {
             }
         }
     }
-    
+
     /**
-     * Analyzes the ramifications of any changes in the possibilities given a 
+     * Analyzes the ramifications of any changes in the possibilities given a
      * change in the soduku grid
      *
      * @param row The row index of the slot that was changed
@@ -153,11 +155,11 @@ public class SodukuSolver {
         analyzeColSinglePos(col);
         analyzeBlocksSinglePos(row, col);
     }
-    
+
     /**
-     * Analyzes a row for any numbers that are only possible in one location 
-     * and inserts them into that location. 
-     * 
+     * Analyzes a row for any numbers that are only possible in one location and
+     * inserts them into that location.
+     *
      * @param row The index of the row to analyze
      */
     public void analyzeRowSinglePos(int row) {
@@ -178,11 +180,11 @@ public class SodukuSolver {
             }
         }
     }
-    
+
     /**
-     * Analyzes a column for any numbers that are only possible in one location 
-     * and inserts them into that location 
-     * 
+     * Analyzes a column for any numbers that are only possible in one location
+     * and inserts them into that location
+     *
      * @param col The index of the column to analyze
      */
     public void analyzeColSinglePos(int col) {
@@ -205,8 +207,8 @@ public class SodukuSolver {
     }
 
     /**
-     * Analyzes a block for any numbers that are only possible in one location 
-     * and inserts them into that location 
+     * Analyzes a block for any numbers that are only possible in one location
+     * and inserts them into that location
      *
      * @param row The row index of a square inside the block to analyze
      * @param col The column index of a square inside the block to analyze
@@ -247,8 +249,9 @@ public class SodukuSolver {
     }
 
     /**
-     * Analyzes all blocks affected by an insertion for numbers that can only be 
+     * Analyzes all blocks affected by an insertion for numbers that can only be
      * possible in one location
+     *
      * @param row The row index of the square where a change took place
      * @param col The column index of the square where a change took place
      */
@@ -276,8 +279,18 @@ public class SodukuSolver {
      */
     public void printPoss() {
         for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                System.out.print("\t" + possibilities[r][c] + " ");
+            for (HashSet<Integer> s : possibilities[r]) {
+                if (s == null) {
+                    continue;
+                }
+                StringBuilder b = new StringBuilder();
+                for (int i : s) {
+                    b.append("" + i);
+                }
+                while (b.length() < 9) {
+                    b.append(" ");
+                }
+                System.out.print(b);
             }
             System.out.println();
         }
@@ -295,4 +308,89 @@ public class SodukuSolver {
         }
         return arr;
     }
+
+    public boolean isValidGrid() {
+        for (int i = 0; i < 9; i++) {
+            HashSet<Integer> rows = new HashSet<>();
+            HashSet<Integer> cols = new HashSet<>();
+            for (int x = 1; x < 10; x++) {
+                rows.add(x);
+                cols.add(x);
+            }
+            for (int j = 0; j < 9; j++) {
+                if (grid[i][j] != 0) {
+                    if (!rows.contains(grid[i][j])) {
+                        return false;
+                    }
+                    rows.remove(grid[i][j]);
+                }
+                if (grid[j][i] != 0) {
+                    if (!cols.contains(grid[j][i])) {
+                        return false;
+                    }
+                    cols.remove(grid[j][i]);
+                }
+            }
+        }
+        for (int bR = 0; bR < 3; bR++) {
+            for (int bC = 0; bC < 3; bC++) {
+                HashSet<Integer> contents = new HashSet<>();
+                for (int x = 1; x < 10; x++) {
+                    contents.add(x);
+                }
+                for (int r = 0; r < 3; r++) {
+                    for (int c = 0; c < 3; c++) {
+                        if (grid[bR * 3 + r][bC * 3 + c] != 0) {
+                            if (!contents.contains(grid[bR * 3 + r][bC * 3 + c])) {
+                                return false;
+                            }
+                            contents.remove(grid[bR * 3 + r][bC * 3 + c]);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Uses a backtracking algorithm to finish solving the Soduku board if possible
+     * @return 
+     */
+    public boolean finishSolving(){
+        Point p;
+        int i = -1;
+        do{
+           p = convert(++i);
+        }while(possibilities[p.x][p.y] == null);        
+        return backTracking(i);
+    }
+    
+    public boolean backTracking(int i){
+        if(i > 80){
+            return true;
+        }        
+        int nextSquare = i;
+        Point p;
+        do{
+           p = convert(++nextSquare);
+        }while(nextSquare < 81 && possibilities[p.x][p.y] == null);
+        Point current = convert(i);
+        
+        Iterator<Integer> iter = possibilities[current.x][current.y].iterator();
+        do{
+            if(!iter.hasNext()){
+                grid[current.x][current.y] = 0;
+                return false;
+            }
+            grid[current.x][current.y] = iter.next();
+        }while(!isValidGrid() || !backTracking(nextSquare));
+        System.out.println(grid[current.x][current.y]);
+        return true;
+    }
+    
+    public Point convert(int i){
+        return new Point(i/9,i%9);
+    }
+
 }
