@@ -17,12 +17,14 @@ public class Tester {
             int[][] puzzle = read(input);
             int[][] solution = read(input);
             SodukuSolver s = new SodukuSolver(puzzle);
+            System.out.println(s.finishSolving());
             int[][] result = s.getGrid();
             if(aTest(result,solution)){
-                System.out.println("Successfully solved puzzle " + (t+1));
+                System.out.println(s.isValidGrid());
+                System.out.println("No wrong moves" + (t+1));
             }
-            else if(bTest(result,solution)){
-                System.out.println("Partially solved puzzle " + (t+1));
+            if(bTest(result,solution)){
+                System.out.println("Completely solved puzzle " + (t+1));
                 s.analyzeBlock(1, 5);
                 s.printGrid();
                 s.printPoss();
@@ -44,7 +46,7 @@ public class Tester {
     private static boolean aTest(int[][] result, int[][] solution) {
         for(int r = 0;r<9;r++){
             for(int c = 0;c<9;c++){
-                if(result[r][c] != solution[r][c]){
+                if(result[r][c] != 0 && result[r][c]!= solution[r][c]){
                     return false;
                 }
             }
@@ -55,7 +57,7 @@ public class Tester {
     public static boolean bTest(int[][] result, int[][] solution) {
         for(int r = 0;r<9;r++){
             for(int c = 0;c<9;c++){
-                if(result[r][c] != solution[r][c] && result[r][c] != 0){
+                if(result[r][c] != solution[r][c]){
                     return false;
                 }
             }
