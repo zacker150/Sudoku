@@ -21,11 +21,13 @@ public class SodukuSolver {
 
     private int[][] grid;
     private HashSet<Integer>[][] possibilities;
+    private SodukuListener listener;
 
     /**
      * Constructs a Soduku Solver with an empty map
      */
-    public SodukuSolver() {
+    public SodukuSolver(SodukuListener listener) {
+        this.listener = listener;
         grid = new int[9][9];
         possibilities = new HashSet[9][9];
         for (int row = 0; row < 9; row++) {
@@ -44,8 +46,8 @@ public class SodukuSolver {
      *
      * @param arr
      */
-    public SodukuSolver(int[][] arr) {
-        this();
+    public SodukuSolver(int[][] arr, SodukuListener listener) {
+        this(listener);
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 if (arr[row][col] != 0) {
@@ -70,10 +72,12 @@ public class SodukuSolver {
         }
         possibilities[row][col] = null;
         grid[row][col] = n;
+        listener.onInsert(row, col, n);
         clearRow(n, row);
         clearCol(n, col);
         clearBlock(n, row, col);
         ramify(row, col);
+        
     }
 
     /**
@@ -88,6 +92,7 @@ public class SodukuSolver {
             HashSet<Integer> cell = possibilities[row][c];
             if (cell != null) {
                 cell.remove(n);
+                listener.onEliminate(row, c, n);
                 if (cell.size() == 1) {
                     int number = cell.iterator().next();
                     insert(number, row, c);
@@ -108,6 +113,7 @@ public class SodukuSolver {
             HashSet<Integer> cell = possibilities[r][col];
             if (cell != null) {
                 cell.remove(n);
+                listener.onEliminate(col, r, n);
                 if (cell.size() == 1) {
                     int number = cell.iterator().next();
                     insert(number, r, col);
@@ -133,6 +139,7 @@ public class SodukuSolver {
                 int tranC = c + 3 * blockC;
                 HashSet<Integer> cell = possibilities[tranR][tranC];
                 if (cell != null) {
+                    listener.onEliminate(tranR, tranC, n);
                     cell.remove(n);
                     if (cell.size() == 1) {
                         int number = cell.iterator().next();
@@ -381,11 +388,12 @@ public class SodukuSolver {
         do{
             if(!iter.hasNext()){
                 grid[current.x][current.y] = 0;
+                listener.onGuess(current.x, current.y, 0);
                 return false;
             }
             grid[current.x][current.y] = iter.next();
+            listener.onGuess(current.x, current.y, grid[current.x][current.y]);
         }while(!isValidGrid() || !backTracking(nextSquare));
-        System.out.println(grid[current.x][current.y]);
         return true;
     }
     
