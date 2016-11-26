@@ -25,6 +25,14 @@ public class SodukuBoardPanel extends JPanel implements SodukuListener{
             }
         }
     }
+    
+    public void reset(){
+        for(int r = 0;r<9;r++){
+            for(int c = 0;c<9;c++){
+                grid[r][c].reset();
+            }
+        }
+    }
 
     @Override
     public void onInsert(int r, int c, int value) {

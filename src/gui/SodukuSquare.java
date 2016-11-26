@@ -18,12 +18,15 @@ public class SodukuSquare extends JPanel {
     public static Font POSSFONT = new Font("Cambria", Font.PLAIN, 12);
 
     public SodukuSquare() {
-        value = 0;
-        possibilities = new boolean[10];
-        Arrays.fill(possibilities, true);
+        reset();
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     }
 
+    public void reset(){
+        value = 0;
+        possibilities = new boolean[10];
+        Arrays.fill(possibilities, true);
+    }
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (value != 0) {
@@ -50,7 +53,7 @@ public class SodukuSquare extends JPanel {
     }
 
     public void setValue(int value) {
-        if (value < 10 && value > 0) {
+        if (value < 10 && value > -1) {
             this.value = value;
         }
         repaint();

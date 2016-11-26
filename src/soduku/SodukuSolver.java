@@ -6,9 +6,11 @@
 package soduku;
 
 import java.awt.Point;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * This class solves a Soduku game to the best of it's ability. The numbers 1-9
@@ -17,17 +19,19 @@ import java.util.Iterator;
  *
  * @author Victor Zeng
  */
-public class SodukuSolver {
+public class SodukuSolver extends Thread{
 
     private int[][] grid;
     private HashSet<Integer>[][] possibilities;
-    private SodukuListener listener;
+    private LinkedList<SodukuListener> listeners;
+    private boolean empty;
+    private boolean slow;
 
     /**
      * Constructs a Soduku Solver with an empty map
      */
-    public SodukuSolver(SodukuListener listener) {
-        this.listener = listener;
+    public SodukuSolver() {
+        listeners = new LinkedList<>();
         grid = new int[9][9];
         possibilities = new HashSet[9][9];
         for (int row = 0; row < 9; row++) {
@@ -38,6 +42,7 @@ public class SodukuSolver {
                 }
             }
         }
+        empty = true;
     }
 
     /**
@@ -46,15 +51,35 @@ public class SodukuSolver {
      *
      * @param arr
      */
-    public SodukuSolver(int[][] arr, SodukuListener listener) {
-        this(listener);
+    public SodukuSolver(int[][] arr) {
+        this();
+        readIn(arr);
+    }
+
+    public void setSlowSolve(boolean b){
+        slow = b;
+    }
+    public void readIn(int[][] arr) {
+        if (arr.length != 9) {
+            throw new IllegalArgumentException("The array must be 9x9");
+        }
+        if (!empty) {
+            throw new IllegalStateException("The grid has already had values inserted");
+        }
         for (int row = 0; row < 9; row++) {
+            if (arr[row].length != 9) {
+                throw new IllegalArgumentException("The array must be 9x9");
+            }
             for (int col = 0; col < 9; col++) {
                 if (arr[row][col] != 0) {
                     insert(arr[row][col], row, col);
                 }
             }
         }
+    }
+
+    public void addListener(SodukuListener listen) {
+        listeners.add(listen);
     }
 
     /**
@@ -67,17 +92,20 @@ public class SodukuSolver {
      * @param col The column index of the slot n will be inserted into
      */
     public void insert(int n, int row, int col) {
+        empty = false;
         if (n < 1 || n > 9 || (possibilities[row][col] != null && !possibilities[row][col].contains(n))) {
             throw new IllegalArgumentException();
         }
         possibilities[row][col] = null;
         grid[row][col] = n;
-        listener.onInsert(row, col, n);
+        for (SodukuListener listener : listeners) {
+            listener.onInsert(row, col, n);
+        }
         clearRow(n, row);
         clearCol(n, col);
         clearBlock(n, row, col);
         ramify(row, col);
-        
+
     }
 
     /**
@@ -92,7 +120,9 @@ public class SodukuSolver {
             HashSet<Integer> cell = possibilities[row][c];
             if (cell != null) {
                 cell.remove(n);
-                listener.onEliminate(row, c, n);
+                for (SodukuListener listener : listeners) {
+                    listener.onEliminate(row, c, n);
+                }
                 if (cell.size() == 1) {
                     int number = cell.iterator().next();
                     insert(number, row, c);
@@ -113,7 +143,9 @@ public class SodukuSolver {
             HashSet<Integer> cell = possibilities[r][col];
             if (cell != null) {
                 cell.remove(n);
-                listener.onEliminate(col, r, n);
+                for (SodukuListener listener : listeners) {
+                    listener.onEliminate(r, col, n);
+                }
                 if (cell.size() == 1) {
                     int number = cell.iterator().next();
                     insert(number, r, col);
@@ -139,7 +171,9 @@ public class SodukuSolver {
                 int tranC = c + 3 * blockC;
                 HashSet<Integer> cell = possibilities[tranR][tranC];
                 if (cell != null) {
-                    listener.onEliminate(tranR, tranC, n);
+                    for (SodukuListener listener : listeners) {
+                        listener.onEliminate(tranR, tranC, n);
+                    }
                     cell.remove(n);
                     if (cell.size() == 1) {
                         int number = cell.iterator().next();
@@ -270,14 +304,14 @@ public class SodukuSolver {
     }
 
     /**
-     * Prints the Soduku grid to the console
+     * Prints the Soduku grid to a PrintStream
      */
-    public void printGrid() {
+    public void printGrid(PrintStream out) {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
-                System.out.print("" + grid[r][c] + " ");
+                out.print("" + grid[r][c] + " ");
             }
-            System.out.println();
+            out.println();
         }
     }
 
@@ -359,46 +393,58 @@ public class SodukuSolver {
         }
         return true;
     }
-    
+
     /**
-     * Uses a backtracking algorithm to finish solving the Soduku board if possible
-     * @return 
+     * Uses a backtracking algorithm to finish solving the Soduku board if
+     * possible
+     *
+     * @return
      */
-    public boolean finishSolving(){
+    public void run() {
         Point p;
         int i = -1;
-        do{
-           p = convert(++i);
-        }while(possibilities[p.x][p.y] == null);        
-        return backTracking(i);
+        do {
+            p = convert(++i);
+        } while (possibilities[p.x][p.y] == null);
+        backTracking(i);
     }
     
-    public boolean backTracking(int i){
-        if(i > 80){
+
+    public boolean backTracking(int i) {
+        if (i > 80) {
             return true;
-        }        
+        }
+        if(slow){
+            try{
+                Thread.sleep(50);
+            }catch(Exception e){}
+        }
         int nextSquare = i;
         Point p;
-        do{
-           p = convert(++nextSquare);
-        }while(nextSquare < 81 && possibilities[p.x][p.y] == null);
+        do {
+            p = convert(++nextSquare);
+        } while (nextSquare < 81 && possibilities[p.x][p.y] == null);
         Point current = convert(i);
-        
+
         Iterator<Integer> iter = possibilities[current.x][current.y].iterator();
-        do{
-            if(!iter.hasNext()){
+        do {
+            if (!iter.hasNext()) {
                 grid[current.x][current.y] = 0;
-                listener.onGuess(current.x, current.y, 0);
+                for (SodukuListener listener : listeners) {
+                    listener.onGuess(current.x, current.y, 0);
+                }
                 return false;
             }
             grid[current.x][current.y] = iter.next();
-            listener.onGuess(current.x, current.y, grid[current.x][current.y]);
-        }while(!isValidGrid() || !backTracking(nextSquare));
+            for (SodukuListener listener : listeners) {
+                listener.onGuess(current.x, current.y, grid[current.x][current.y]);
+            }
+        } while (!isValidGrid() || !backTracking(nextSquare));
         return true;
     }
-    
-    public Point convert(int i){
-        return new Point(i/9,i%9);
+
+    public Point convert(int i) {
+        return new Point(i / 9, i % 9);
     }
 
 }
