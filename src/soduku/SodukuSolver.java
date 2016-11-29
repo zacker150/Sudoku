@@ -19,14 +19,14 @@ import java.util.LinkedList;
  *
  * @author Victor Zeng
  */
-public class SodukuSolver extends Thread{
+public class SodukuSolver{
 
     private int[][] grid;
     private HashSet<Integer>[][] possibilities;
     private LinkedList<SodukuListener> listeners;
     private boolean empty;
     private boolean slow;
-
+    
     /**
      * Constructs a Soduku Solver with an empty map
      */
@@ -56,9 +56,10 @@ public class SodukuSolver extends Thread{
         readIn(arr);
     }
 
-    public void setSlowSolve(boolean b){
+    public void setSlowSolve(boolean b) {
         slow = b;
     }
+
     public void readIn(int[][] arr) {
         if (arr.length != 9) {
             throw new IllegalArgumentException("The array must be 9x9");
@@ -101,6 +102,12 @@ public class SodukuSolver extends Thread{
         for (SodukuListener listener : listeners) {
             listener.onInsert(row, col, n);
         }
+        if (slow) {
+            try {
+                Thread.sleep(50);
+            } catch (Exception e) {
+            }
+        }
         clearRow(n, row);
         clearCol(n, col);
         clearBlock(n, row, col);
@@ -120,6 +127,12 @@ public class SodukuSolver extends Thread{
             HashSet<Integer> cell = possibilities[row][c];
             if (cell != null) {
                 cell.remove(n);
+                if (slow) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                    }
+                }
                 for (SodukuListener listener : listeners) {
                     listener.onEliminate(row, c, n);
                 }
@@ -143,6 +156,12 @@ public class SodukuSolver extends Thread{
             HashSet<Integer> cell = possibilities[r][col];
             if (cell != null) {
                 cell.remove(n);
+                if (slow) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                    }
+                }
                 for (SodukuListener listener : listeners) {
                     listener.onEliminate(r, col, n);
                 }
@@ -170,6 +189,12 @@ public class SodukuSolver extends Thread{
                 int tranR = r + 3 * blockR;
                 int tranC = c + 3 * blockC;
                 HashSet<Integer> cell = possibilities[tranR][tranC];
+                if (slow) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                    }
+                }
                 if (cell != null) {
                     for (SodukuListener listener : listeners) {
                         listener.onEliminate(tranR, tranC, n);
@@ -400,24 +425,24 @@ public class SodukuSolver extends Thread{
      *
      * @return
      */
-    public void run() {
+    public void finishSolving() {
         Point p;
         int i = -1;
         do {
             p = convert(++i);
-        } while (possibilities[p.x][p.y] == null);
+        } while (i < 81 && possibilities[p.x][p.y] == null);
         backTracking(i);
     }
-    
 
     public boolean backTracking(int i) {
         if (i > 80) {
             return true;
         }
-        if(slow){
-            try{
+        if (slow) {
+            try {
                 Thread.sleep(50);
-            }catch(Exception e){}
+            } catch (Exception e) {
+            }
         }
         int nextSquare = i;
         Point p;
