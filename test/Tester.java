@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Scanner;
+import soduku.SodukuSolver;
 
 /**
  *
  * @author zacke
  */
 public class Tester {
+    
     public static void main(String[] args) throws FileNotFoundException{
         Scanner input = new Scanner(new File("Test.txt"));
         int test = input.nextInt();
@@ -17,7 +19,7 @@ public class Tester {
             int[][] puzzle = read(input);
             int[][] solution = read(input);
             SodukuSolver s = new SodukuSolver(puzzle);
-            System.out.println(s.finishSolving());
+            s.finishSolving();
             int[][] result = s.getGrid();
             if(aTest(result,solution)){
                 System.out.println(s.isValidGrid());
@@ -26,11 +28,9 @@ public class Tester {
             if(bTest(result,solution)){
                 System.out.println("Completely solved puzzle " + (t+1));
                 s.analyzeBlock(1, 5);
-                s.printGrid();
                 s.printPoss();
             }
         }
-        
     }
     
     public static int[][] read(Scanner input){
