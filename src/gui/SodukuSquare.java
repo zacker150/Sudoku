@@ -26,6 +26,7 @@ public class SodukuSquare extends JPanel {
         value = 0;
         possibilities = new boolean[10];
         Arrays.fill(possibilities, true);
+        repaint();
     }
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
